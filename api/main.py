@@ -319,7 +319,18 @@ async def watch_users(request):
         if not is_admin:
             return json({'message': 'Page Not Found'}, 404)
 
-        
+        stmt = select(User).options(selectinload(User.accounts))
+        query_result = await session.execute(stmt)
+        users = query_result.scalars().all()
+
+        result = []
+        for person in users:
+            accounts = [acc.to_dict() for acc in person.accounts]
+            acc_dict = person.to_dict()
+            acc_dict['accounts'] = accounts
+            result.append(acc_dict)
+
+    return json(result)
 
 
 def init():
