@@ -23,8 +23,7 @@ login=user1
 
 ###
 
-GET http://127.0.0.1:8000/activate/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjoxNjYyMzkzNDEwfQ.kiTPoMz9VIJ5xgXHpM80-WgsbisTBOnpG9hrPvliL5A
-# {'token': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InVzZXIxIn0.uTZxvXkAbL-5PSBZf-j2S-pv3p5U2clnLggeOdhwGAs'}
+GET http://127.0.0.1:8000/activate/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjoxNjYyMzk3MTEyfQ.XNlHDh9hsfVgXvWIUrNmG5vM3RSviCHshQLDp2TTmXU
 
 ###
 GET http://127.0.0.1:8000/test/create
@@ -32,4 +31,12 @@ GET http://127.0.0.1:8000/test/create
 ###
 GET http://127.0.0.1:8000/products
 content-type: application/json
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InVzZXIxIn0.uTZxvXkAbL-5PSBZf-j2S-pv3p5U2clnLggeOdhwGAs
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InVzZXIxIn0.fPq-NhED3i71Ftvr_UsoZA7a0moBYkm3JctgeqIqi_M
+###
+
+GET http://127.0.0.1:8000/admin/products
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InVzZXIxIn0.fPq-NhED3i71Ftvr_UsoZA7a0moBYkm3JctgeqIqi_M
+###
+
+GET http://127.0.0.1:8000/admin/users
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InVzZXIxIn0.fPq-NhED3i71Ftvr_UsoZA7a0moBYkm3JctgeqIqi_M

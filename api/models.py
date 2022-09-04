@@ -18,6 +18,7 @@ class User(Base):
     token = Column(String())
     is_admin = Column(Boolean, nullable=False, default=False)
     is_activated = Column(Boolean, nullable=False, default=False)
+    is_banned = Column(Boolean, nullable=False, default=False)
     accounts = relationship('Account', back_populates='owner')
 
     def __init__(self, login, password, is_admin=False):

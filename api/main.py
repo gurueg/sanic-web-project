@@ -180,7 +180,8 @@ async def accounts(request):
         if user is None:
             return text('Invalid Token', 400)
 
-        stmt = select(Account).where(Account.owner_id == user.id).options(selectinload(Account.transactions))
+        stmt = select(Account).where(Account.owner_id == user.id).\
+            options(selectinload(Account.transactions))
         query_result = await session.execute(stmt)
         accounts = query_result.scalars().all()
 
@@ -284,12 +285,16 @@ async def increase_balance(request):
     return json(response_data)
 
 
-async def is_user_admin(session, token):
+async def get_user_by_token(session, token):
     stmt = select(User).where(User.token == token)
     result = await session.execute(stmt)
-    user = result.scalar()
+    return result.scalar()
 
-    return user.is_admin
+
+async def get_user_by_id(session, id):
+    stmt = select(User).where(User.id == id)
+    result = await session.execute(stmt)
+    return result.scalar()
 
 
 @app.get('/admin/products')
@@ -297,9 +302,9 @@ async def is_user_admin(session, token):
 async def watch_products(request):
     session = request.ctx.session
     async with session.begin():
-        is_admin = await is_user_admin(session, request.token)
+        user = await get_user_by_token(session, request.token)
 
-        if not is_admin:
+        if not user.is_admin:
             return json({'message': 'Page Not Found'}, 404)
 
         stmt = select(Product)
@@ -314,9 +319,9 @@ async def watch_products(request):
 async def watch_users(request):
     session = request.ctx.session
     async with session.begin():
-        is_admin = await is_user_admin(session, request.token)
+        user = await get_user_by_token(session, request.token)
 
-        if not is_admin:
+        if not user.is_admin:
             return json({'message': 'Page Not Found'}, 404)
 
         stmt = select(User).options(selectinload(User.accounts))
@@ -331,6 +336,28 @@ async def watch_users(request):
             result.append(acc_dict)
 
     return json(result)
+
+
+@app.post('/admin/ban_user')
+@need_authentification
+async def change_user_ban_status(request):
+    session = request.ctx.session
+    async with session.begin():
+        admin = await get_user_by_token(session, request.token)
+
+        if not admin.is_admin:
+            return json({'message': 'Page Not Found'}, 404)
+
+        user_id = request.json.user_id
+        ban_status = request.json.status
+
+        if user_id is None or ban_status is None:
+            return json({'message': 'Bad request body'}, 400)
+
+        user = await get_user_by_id(session, user_id)
+        user.is_banned = ban_status
+
+    return json({'message': f'User {user_id} change status to {ban_status}'})
 
 
 def init():
