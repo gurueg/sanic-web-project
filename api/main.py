@@ -1,12 +1,10 @@
-from pydoc import doc
-from sanic import Sanic, exceptions
+from sanic import Sanic
 from sanic.response import text, json
-from sanic.exceptions import NotFound
 
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from contextvars import ContextVar
-from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker, selectinload
 from sqlalchemy import select, and_
@@ -18,9 +16,11 @@ from encryptyng import get_activation_token, need_authentification,\
     get_encripdted_password
 from models import Base, User, Product, Account, Transaction
 import settings
+from admin import admin_api
 
 
 app = Sanic(__name__)
+app.blueprint(admin_api)
 
 
 def setup_database():
@@ -84,8 +84,6 @@ async def register(request):
         async with session.begin():
             person = User(login, password)
             session.add_all([person])
-            # except IntegrityError:
-            #     return json({'message': 'User with that login already exists'})
 
         activation_token = get_activation_token(person)
 
@@ -283,81 +281,6 @@ async def increase_balance(request):
         'amount': amount
     }
     return json(response_data)
-
-
-async def get_user_by_token(session, token):
-    stmt = select(User).where(User.token == token)
-    result = await session.execute(stmt)
-    return result.scalar()
-
-
-async def get_user_by_id(session, id):
-    stmt = select(User).where(User.id == id)
-    result = await session.execute(stmt)
-    return result.scalar()
-
-
-@app.get('/admin/products')
-@need_authentification
-async def watch_products(request):
-    session = request.ctx.session
-    async with session.begin():
-        user = await get_user_by_token(session, request.token)
-
-        if not user.is_admin:
-            return json({'message': 'Page Not Found'}, 404)
-
-        stmt = select(Product)
-        result = await session.execute(stmt)
-        products = result.scalars().all()
-
-    return json([p.to_dict() for p in products])
-
-
-@app.get('/admin/users')
-@need_authentification
-async def watch_users(request):
-    session = request.ctx.session
-    async with session.begin():
-        user = await get_user_by_token(session, request.token)
-
-        if not user.is_admin:
-            return json({'message': 'Page Not Found'}, 404)
-
-        stmt = select(User).options(selectinload(User.accounts))
-        query_result = await session.execute(stmt)
-        users = query_result.scalars().all()
-
-        result = []
-        for person in users:
-            accounts = [acc.to_dict() for acc in person.accounts]
-            acc_dict = person.to_dict()
-            acc_dict['accounts'] = accounts
-            result.append(acc_dict)
-
-    return json(result)
-
-
-@app.post('/admin/ban_user')
-@need_authentification
-async def change_user_ban_status(request):
-    session = request.ctx.session
-    async with session.begin():
-        admin = await get_user_by_token(session, request.token)
-
-        if not admin.is_admin:
-            return json({'message': 'Page Not Found'}, 404)
-
-        user_id = request.json.user_id
-        ban_status = request.json.status
-
-        if user_id is None or ban_status is None:
-            return json({'message': 'Bad request body'}, 400)
-
-        user = await get_user_by_id(session, user_id)
-        user.is_banned = ban_status
-
-    return json({'message': f'User {user_id} change status to {ban_status}'})
 
 
 def init():

@@ -1,8 +1,7 @@
 
 from sqlalchemy import Column, Integer, String,\
-    Boolean, ForeignKey, CheckConstraint
+    Boolean, ForeignKey, CheckConstraint, select, and_
 from sqlalchemy.orm import declarative_base, relationship
-import jwt
 
 from encryptyng import get_encripdted_password, get_user_auth_token
 
@@ -103,3 +102,15 @@ class Transaction(Base):
             'account_id': self.account_id,
             'amount': self.amount
         }
+
+
+async def get_user_by_token(session, token):
+    stmt = select(User).where(User.token == token)
+    result = await session.execute(stmt)
+    return result.scalar()
+
+
+async def get_user_by_id(session, id):
+    stmt = select(User).where(User.id == id)
+    result = await session.execute(stmt)
+    return result.scalar()
