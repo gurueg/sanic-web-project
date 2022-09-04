@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String,\
     Boolean, ForeignKey, CheckConstraint, select, and_
 from sqlalchemy.orm import declarative_base, relationship
 
-from encryptyng import get_encripdted_password, get_user_auth_token
+from .encryptyng import get_encripdted_password, get_user_auth_token
 
 Base = declarative_base()
 

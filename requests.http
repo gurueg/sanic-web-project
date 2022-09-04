@@ -23,7 +23,7 @@ login=user1
 
 ###
 
-GET http://127.0.0.1:8000/activate/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjoxNjYyMzk3MTEyfQ.XNlHDh9hsfVgXvWIUrNmG5vM3RSviCHshQLDp2TTmXU
+GET http://127.0.0.1:8000/activate/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjoxNjYyNDAwODY3fQ.oNoUQzFItqBXMOh9RX1GxYq6YyTyfgqg7yFKw5zoFXU
 
 ###
 GET http://127.0.0.1:8000/test/create

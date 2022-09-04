@@ -1,59 +1,22 @@
-from sanic import Sanic
+from sanic import Blueprint
 from sanic.response import text, json
 
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from contextvars import ContextVar
-# from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import sessionmaker, selectinload
+from sqlalchemy.orm import selectinload
 from sqlalchemy import select, and_
 from sqlalchemy.exc import IntegrityError
-import asyncio
 
-from encryptyng import get_activation_token, need_authentification,\
+from ..encryptyng import get_activation_token, need_authentification,\
     check_token, check_activation_token, get_transaction_signasture,\
     get_encripdted_password
-from models import Base, User, Product, Account, Transaction
-import settings
-from admin import admin_api
+from ..models import User, Product, Account, Transaction
 
 
-app = Sanic(__name__)
-app.blueprint(admin_api)
+bp = Blueprint("user_api")
 
 
-def setup_database():
-    _bind = create_async_engine(settings.DB_URL)
-    _base_ctx = ContextVar('session')
-
-    @app.middleware('request')
-    async def inject_session(request):
-        print('inject_session')
-        request.ctx.session = sessionmaker(
-            _bind,
-            AsyncSession,
-            expire_on_commit=False)()
-        request.ctx.session_ctx_token = _base_ctx.set(request.ctx.session)
-
-    @app.middleware('response')
-    async def close_session(request, response):
-        print('close_session')
-        if hasattr(request.ctx, 'session_ctx_token'):
-            _base_ctx.reset(request.ctx.session_ctx_token)
-            await request.ctx.session.close()
-
-    # _metadata = Base.metadata
-
-    # async def init_models():
-    #     async with _bind.begin() as conn:
-    #         await conn.run_sync(_metadata.drop_all)
-    #         await conn.run_sync(_metadata.create_all)
-
-    # asyncio.run(init_models())
-
-
-@app.get('/')
+@bp.get('/')
 async def main_page(request):
     if check_token(request):
         session = request.ctx.session
@@ -69,7 +32,7 @@ async def main_page(request):
         return text('Need Auth.')
 
 
-@app.route('/register', methods=['get', 'post'])
+@bp.route('/register', methods=['get', 'post'])
 async def register(request):
     if request.method == 'GET':
         return text('Register Form.')
@@ -90,12 +53,12 @@ async def register(request):
         return text('http://127.0.0.1:8000/activate/' + activation_token)
 
 
-@app.exception(IntegrityError)
+@bp.exception(IntegrityError)
 async def integrity_hanling(request, exception):
     return json({'message': 'User with that login already exists'}, 400)
 
 
-@app.route('/login', methods=['get', 'post'])
+@bp.route('/login', methods=['get', 'post'])
 async def login(request):
     if request.method == 'GET':
         return text('Login Form.')
@@ -119,7 +82,7 @@ async def login(request):
         return json(person.to_dict(), 200)
 
 
-@app.get('/activate/<activate_token>')
+@bp.get('/activate/<activate_token>')
 async def activate(request, activate_token):
     user_id = check_activation_token(activate_token)
     if user_id is None:
@@ -134,7 +97,7 @@ async def activate(request, activate_token):
         return text(str(person.to_dict()))
 
 
-@app.get('/test/create')
+@bp.get('/test/create')
 async def create_products(request):
     session = request.ctx.session
     async with session.begin():
@@ -153,7 +116,7 @@ async def create_products(request):
     return text('added')
 
 
-@app.get('/products')
+@bp.get('/products')
 @need_authentification
 async def get_produts(request):
     session = request.ctx.session
@@ -166,7 +129,7 @@ async def get_produts(request):
     return json(result)
 
 
-@app.get('/accounts')
+@bp.get('/accounts')
 @need_authentification
 async def accounts(request):
     session = request.ctx.session
@@ -193,7 +156,7 @@ async def accounts(request):
     return json(result)
 
 
-@app.post('/products/buy')
+@bp.post('/products/buy')
 @need_authentification
 async def buy_product(request):
     product_id = request.json["product_id"]
@@ -233,7 +196,7 @@ async def buy_product(request):
     return text('text')
 
 
-@app.post('/payment/webhook')
+@bp.post('/payment/webhook')
 async def increase_balance(request):
     account_id = request.json["account_id"]
     user_id = request.json["user_id"]
@@ -281,17 +244,3 @@ async def increase_balance(request):
         'amount': amount
     }
     return json(response_data)
-
-
-def init():
-    setup_database()
-    app.run(
-        host='127.0.0.1',
-        port=8000,
-        debug=settings.DEBUG,
-        auto_reload=settings.DEBUG
-    )
-
-
-if __name__ == '__main__':
-    init()
