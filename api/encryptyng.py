@@ -2,7 +2,7 @@ from functools import wraps
 
 import jwt
 from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
-from sanic import text
+from sanic import json
 import datetime
 from settings import JWT_KEY, TRANSACTIONS
 from Crypto.Hash import SHA1
@@ -33,7 +33,7 @@ def need_authentification(wrapped):
             if is_authenticated:
                 response = await f(request, *args, **kwargs)
                 return response
-            return text("You are unauthorized.", 401)
+            return json({'message': 'You are unauthorized'}, 401)
 
         return decorated_function
 

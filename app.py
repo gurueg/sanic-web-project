@@ -1,6 +1,6 @@
 from sanic import Sanic
 from api.admin import admin_api
-from api.user import user_api
+from api.main import user_api
 
 from sqlalchemy.ext.asyncio import create_async_engine
 from contextvars import ContextVar
